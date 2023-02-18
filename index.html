@@ -1,0 +1,212 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-P33ZH90CMC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-P33ZH90CMC');
+</script>
+    <meta charset="UTF-8">
+    <title>Symuator odkurzacza</title>
+
+    <link rel="stylesheet" href="https://aplikacje.top/css/header.css">
+    <link rel="stylesheet" href="https://aplikacje.top/css/common.css">
+
+
+<script src="js/CanvasBoard.js"></script> 
+<script src="js/CollisionHelper.js"></script> 
+<script src="js/RobotInterface.js"></script> 
+<script src="js/Simulation.js"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.js" integrity="sha512-WYlXqL7GPpZL2ImDErTX0RMKy5hR17vGW5yY04p9Z+YhYFJcUUFRT31N29euNB4sLNNf/s0XQXZfzg3uKSoOdA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.2/split.min.js" integrity="sha512-to2k78YjoNUq8+hnJS8AwFg/nrLRFLdYYalb18SlcsFRXavCOTfBF3lNyplKkLJeB8YjKVTb1FPHGSy9sXfSdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="js/main.js"></script> 
+</head>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="js/external/resizable-style.css">
+<body>
+
+    <div class="appHeader">
+
+        <a href="https://aplikacje.top/">
+
+            <img src="https://aplikacje.top/img/logo.png">
+
+        </a>
+
+        <div class="appNameContainer">
+
+             <div class="appName">
+
+                Symulator odkurzacza
+
+             </div>
+
+             
+
+             <div class="appDesc">
+
+                Wyzwanie dla programistów
+
+             </div>
+
+        </div>     
+
+    </div> 
+
+
+    <h2>Zaprogramuj własnego robota sprzątającego w javascript!</h2>
+    <p>Poniżej, po lewej stronie znajduje się ekran symulacji robota sprzątającego. Symulacje włączamy zielonym przyciskiem. Po prawej stronie znajduje się edytor javascript, w którym za pomocą 5 funkcji możecie robota zaprogramować. Dokładny opis jak to zrobić znajduje się w komentarzach do kodu. Obecny przykładowy kod wstępnie działa i możesz z nim eksperymentować. Ciemny obszar to przepaść, która kończy symulację. Powinieneś zebrać jak najwięcej flag. Uważaj na rozładowującą się baterię. Reszty się domyślisz bo to bardzo proste :). Edytor javscript możesz powiększyć przeciągając separator pomiędzy widokiem kodu i symulacji.</p>
+
+<div class="split">
+    <div id="split-0">
+        <div class="infoBox">
+            
+            <button class="mainButton displayOnStop" id="simStartBtn">Rozpocznij symulację</button>  
+            <button style="display:none" class="mainButton displayOnPlay" id="simStopBtn">Przerwij symulację</button>
+
+			<div class="slidecontainer">
+			  szybko<input type="range" min="20" max="500" value="20" class="slider" id="speedRange">wolno
+			</div>	
+
+			<span class="option displayOnStop">
+            poziom:<select id="gameLevels"></select>
+            </span>
+            <div id="telemetry" class="displayOnPlay"><span>Oczekiwanie na start</span></div>
+            
+        </div>
+        <canvas id="simulationCanvas" width="900" height="680"></canvas>
+        <div class="infoBox">
+            <div class="area">
+                <textarea id="traceBox"></textarea>
+            </div>            
+        </div>
+    </div>
+    <div id="split-1">
+      <div class="editorWrapper">
+        <div class="editorButtons">
+            <button id="saveCode">Zapisz kod</button>
+            <button id="restoreCode">Odtwórz zapisany kod</button>
+            <span id="saveStatus">Kod zapisuje się w local storage Twojej przeglądarki</span>
+        </div>
+        <div id="editor">//Funkcja wywola sie jeden raz przy rozpoczeciu symulacji.
+//Kazda funkcja wywoluje sie z referencja do obiektu robot, ktorym sterujemy robotem.
+function onStarted(robot) {
+    //funkcja powoduje wypisanie podanego tekstu na konsoli
+    robot.shout("Start!!!");
+    
+    //ustawienie koloru lampki na robocie
+    robot.color("green");
+    
+    //jesli ustawimy setRadarAlert to radar robota bedzie caly czas mierzyl ogleglosc
+    //gdy odleglosc ta bedzie mniejsza niz ta, ktora zadeklarowales
+    //wywola sie zdarzenie onRadarAlert, ktore mozesz obsluzyc
+    robot.setRadarAlert(10); 
+    
+    //tutaj kazemy robotowi wykonac ruch
+    //przekazujemy tabele z sekwencja ruchow do wykonania
+    //zdarzenie np. onCollision przerwie sekwencje!
+    //obiekt sklada sie z pol:
+    //  l - moc lewego silnika  (od -100 do 100)
+    //  r - moc prawego silnika (od -100 do 100)
+    //  t - czas pracy (podany w nieokreslonych krotkich niepodzielnych jednostkach czasu)
+	//                 (w zaleznosci od wydajnosci kompa ok 1/30 sekundy)
+    robot.go([
+        {l: 100, r: 95, t: 50},  //jazda lekko po luku bo jeden silnik ma mniej mocy
+        {l: 100, r: -100, t: 4}, //obrot dookola wlasnej osi bo jeden silnik kreci sie odwrotnie
+        {l: 100, r: 100, t: 10}, //jazda prosto do przodu
+    ]);
+    
+    //nic nie stoi na przeszkodzie by wprowadzic jakas swoja zmienna
+    //mozna z niej bedzie korzystac w innych funkcjach
+    //w tym przypadku ustawilem sobie licznik
+    robot.myPrivateCounter = 0;
+}
+
+//Wywolowana gdy robot dotknie sciany.
+//Wywoluje sie z parametrem angle
+//parametr angle oznacza kat (w radianach) wzgledem robota w ktorym miejscu dotkanal sciany.
+function onCollision(robot,angle) {
+	//tak wyglada konwersja z radianow na stopnie, ale wygodniej stosowac radiany
+    robot.shout("Dotknieta sciana! Kat uderzenia "+(angle/Math.PI)*180+" stopni");
+    robot.color("red");
+    
+    //uzywamy tutaj naszej zmiennej, ktora sami wprowadzilismy
+    //ja uzywam licznika aby robot zachowywal sie inaczej co kilka cykli
+    robot.myPrivateCounter+=1;
+    if (robot.myPrivateCounter>7) {
+        robot.go([
+            {l: -100, r: -100, t: 14}, //cofamy sie bo silniki kreca sie odwrotnie
+            {l: -100, r: 100, t: 6}   //obracamy sie nieco w lewo
+        ]);
+        robot.myPrivateCounter = 0;
+    } else {
+        robot.go([
+            {l: -100, r: -100, t: 7}, 
+            {l: 50, r: -50, t: 3}
+        ]);
+    }
+    //pamietaj, ze nie mozna obrocic sie o jakis doklany kat, np 90 stopni
+    //to dlatego ze w prawdziwym swiecie roboty tez nie potrafia sie obrocic idelanie o zadany kat
+    //mozesz regulowac tylko moc silnikow, wiec sam sprobuj dobrac parametry
+}
+
+//Wywolywana gdy czujniki robota wykryja ze znajduje sie nad przepascia.
+//Radzilbym wtedy szybko sie wycofac.
+function onFallDetection(robot) {
+    robot.shout("Uwaga! Wykryto przepasc! Wracam!!");
+    robot.color("orange");
+    robot.go([
+        {l: -100, r: -100, t: 9}, //cofam sie
+        {l: -100, r: 100, t: 4}   //odwracam sie
+    ]);
+}
+
+//Funkcja wywolana zostaje gdy robot zakonczy sekwencje ruchow bez przeszkod
+//czyli zadna przeszkoda lub przepasc nie wystapi.
+//W praktyce bedzie potrzebna bardzo czesto bo ona decyduje co robimy dalej.
+//
+//Otrzymujesz w niej dwie informacje:
+//collision (true/false) - czy robot dotyka w tym momencie sciany
+//radarDist - odczyt obecnej odleglosci z radaru
+//
+//Uwaga! Radar to promien lasera badajacy odleglosc tylko w kierunku gdzie skierowane jest czolo robota
+//czyli radar nie patrzy dookola! wazne jest tez, ze jego maksymalny zasieg to 200.
+//Jesli radar zwraca false to oznacza ze zadna sciana nie jest w jego zasiegu.
+function onTaskFinished(robot,collision,radarDist) {
+    robot.shout("Sekwencja skonczona. czy mamy kolizje: "+collision+", odleglosc radaru "+radarDist);
+    robot.color("green");
+    robot.go([
+        {l: 100, r: 90, t: 30},
+        {l: 90, r: 100, t: 30}
+    ]);
+}
+
+//To zdarzenie wywolane zostanie tylko kiedy uprzednio ustawiles odleglosc alertu radaru
+//za pomoca funkcji robot.setRadarAlert().
+//Kiedy radar bedzie mial mniejszy odczyt,odpali to zdarzenie.
+//Zdarzenie zostanie wywolane drugi i koljeny raz dopiero gdy przeszkoda zniknie z zasiegu
+//radau i pojawi sie w nim kolejny raz.
+function onRadarAlert(robot, distance) {
+    robot.shout("Alarm radaru! Dystans: "+distance);
+    robot.color("yellow");
+    //w tym przykladzie nie podejmuje zadnej akcji gdy nastapi alert radaru
+}</div> 
+      </div>
+        
+    
+    </div>
+</div>
+
+<div class="footer">
+
+<span>Strona jest częścią projektu <a href="https://aplikacje.top">aplikacje.top</a>. Niekomercyjnego i hobbystycznego pomysłu polegającego na tworzeniu aplikacji o charakterze edukacyjnym oraz użytkowym. Nieodłączną częścią projektu jest <a href="https://www.youtube.com/mazaq86">mój kanał na Youtube</a>, gdzie tłumaczę wiele ciekawych zagadnień. <br>Strona jest darmowa i bez reklam więc możesz to docenić robiąc mi przelew <a href="https://paypal.me/mazaq1">przez PayPal</a>.</span>
+
+</div>
+</body>
+
+</html>

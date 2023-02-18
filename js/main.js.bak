@@ -1,0 +1,251 @@
+const simple_walls = [
+	{x:20, y:20},
+	{x:880, y:20},
+	{x:880, y:660},
+	{x:20, y:660},
+];
+
+const walls = [   
+    {x:480, y:660},
+    {x:480, y:600},
+    {x:500, y:600},
+    {x:500, y:660},
+    {x:780, y:660},
+    {x:880, y:560},
+    {x:880, y:400},
+    {x:800, y:400},
+    {x:800, y:340},
+    {x:820, y:340},
+    {x:820, y:380},
+    {x:880, y:380},
+    {x:880, y:260},
+    {x:560, y:260},
+    {x:560, y:380},
+    {x:720, y:380},
+    {x:720, y:340},
+    {x:740, y:340},
+    {x:740, y:400},
+    {x:550, y:400},
+    {x:500, y:500},
+    {x:500, y:520},
+    {x:480, y:520},
+    {x:480, y:500},
+    {x:540, y:380},
+    {x:540, y:240},
+    {x:880, y:240},
+    {x:880, y:100},
+    {x:800, y:20},
+    {x:560, y:20},
+    {x:560, y:160},
+    {x:540, y:160},
+    {x:540, y:20},
+    {x:420, y:20},
+    {x:420, y:160},
+    {x:400, y:160},
+    {x:400, y:20},
+    {x:60, y:20},
+    {x:20, y:60},
+    {x:20, y:240},
+    {x:200, y:240},
+    {x:360, y:320},
+    {x:400, y:320},
+    {x:400, y:240},
+    {x:420, y:240},
+    {x:420, y:360},
+    {x:410, y:380},
+    {x:390, y:380},
+    {x:400, y:360},
+    {x:200, y:260},
+    {x:140, y:260},
+    {x:140, y:280},
+    {x:120, y:280},
+    {x:120, y:260},
+    {x:20, y:260},
+    {x:20, y:380},
+    {x:60, y:380},
+    {x:60, y:360},
+    {x:80, y:360},
+    {x:80, y:380},
+    {x:120, y:380},
+    {x:120, y:360},
+    {x:140, y:360},
+    {x:140, y:380},
+    {x:160, y:390},
+    {x:160, y:410},
+    {x:140, y:400},
+    {x:80, y:400},
+    {x:40, y:420},
+    {x:20, y:460},
+    {x:20, y:520},
+    {x:60, y:600},
+    {x:80, y:620},
+    {x:160, y:660},
+    {x:340, y:660},
+    {x:340, y:500},
+    {x:240, y:450},
+    {x:240, y:430},
+    {x:340, y:480},
+    {x:350, y:460},
+    {x:370, y:460},
+    {x:360, y:480},
+    {x:360, y:660},  
+];
+
+const obsticles = [
+    [
+      {x:560, y:640},
+      {x:580, y:640},
+      {x:580, y:620},
+      {x:560, y:620},        
+    ],
+    [
+      {x:700, y:640},
+      {x:720, y:640},
+      {x:720, y:620},
+      {x:700, y:620},
+    ],
+    [
+      {x:740, y:200},
+      {x:820, y:200},
+      {x:820, y:120},
+      {x:800, y:100},
+      {x:760, y:100},
+      {x:740, y:120},
+    ],
+    [
+      {x:80, y:520},
+      {x:100, y:520},
+      {x:120, y:500},
+      {x:120, y:480},
+      {x:100, y:460},
+      {x:80, y:460},
+      {x:60, y:480},
+      {x:60, y:500},    
+    ],
+    [
+      {x:260, y:380},
+      {x:270, y:360},
+      {x:250, y:350},
+      {x:240, y:370},    
+    ],
+    [
+      {x:120, y:220},
+      {x:200, y:220},
+      {x:200, y:160},
+      {x:120, y:160},    
+    ],
+    [
+      {x:240, y:100},
+      {x:280, y:100},
+      {x:280, y:40},
+      {x:240, y:40},    
+    ],
+    [
+      {x:320, y:140},
+      {x:340, y:140},
+      {x:340, y:120},
+      {x:320, y:120},    
+    ],
+];
+
+const holes = [
+    [
+      {x:420, y:110},
+      {x:540, y:110},
+      {x:540, y:20},
+      {x:420, y:20},    
+    ],
+    [
+      {x:820, y:380},
+      {x:880, y:380},
+      {x:880, y:340},
+      {x:820, y:340},    
+    ]
+];
+
+   
+
+var simulation = null;
+var editor = null;
+var slider = null;
+
+function initSimulation() {
+    var c = document.getElementById("simulationCanvas"); 
+    simulation = new Simulation(c,getMap(),null,null,slider.value);
+}
+
+function simulationStart() {
+	hideControls();
+    var c = document.getElementById("simulationCanvas");
+    var telemetry = document.getElementById("telemetry");
+    var traceBox = document.getElementById("traceBox"); 
+    if (simulation) {
+        simulation.simStop();
+    }    
+    simulation = new Simulation(c,getMap(),traceBox,telemetry,slider.value);
+    let functionsCode = editor.getValue();
+    eval(functionsCode);
+    simulation.registerFunctions(onStarted,onCollision,onFallDetection,onTaskFinished,onRadarAlert);
+    simulation.simStart();
+}
+
+function getMap() {
+	const map = {walls:[walls,...obsticles],holes:holes}; 
+	const map_simple = {walls:[simple_walls],holes:[]}    
+	
+	return map;
+}
+
+function simulationStop() {
+	showControls();
+    simulation.simStop();
+}
+
+function initEditor() {
+    editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/javascript");
+}
+
+function initResizable() {
+    Split(['#split-0', '#split-1']);
+}
+
+function initSlider() {
+	slider = document.getElementById("speedRange");
+}
+
+
+function addListeners() {
+    document.querySelector("#simStartBtn").onclick = function() {
+      simulationStart();
+    }
+    document.querySelector("#simStopBtn").onclick = function() {
+      simulationStop();
+    }
+    
+}
+
+function hideControls() {	
+	document.querySelectorAll('.displayOnStop').forEach(function(el) {
+	   el.style.display = 'none';
+	});
+}
+
+function showControls() {	
+	document.querySelectorAll('.displayOnStop').forEach(function(el) {
+	   el.style.display = '';
+	});
+}
+
+
+
+
+window.onload = function(event){ 
+    initSlider();
+	initSimulation();
+    addListeners();
+    initEditor();
+    initResizable(); 
+	
+}; 

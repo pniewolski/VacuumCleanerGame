@@ -1,0 +1,89 @@
+                                                                                                                                                                  <!DOCTYPE html>
+<html>
+<head>
+    <title>Polyline Editor</title>
+</head>
+<body >
+    <canvas style="background:gray" id="canvas" width="1280" height="720"></canvas>
+
+    <script>
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var currentArr = 0;
+        var shifter = -8;
+        var points = [];
+        
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(450, 630, 17, 0, 2 * Math.PI, false);
+                ctx.stroke();
+        
+        var snapping = false;
+        
+        function snaperWraper(num) {
+            if(snapping) {
+                return Math.round(num/10)*10;
+            } else {
+                return num;
+            }
+        }
+
+        canvas.addEventListener("mousedown", function(event) { 
+            if(!points[currentArr]) points[currentArr] = [];
+            points[currentArr].push({ x: snaperWraper(event.clientX+shifter), y: snaperWraper(event.clientY+shifter) });
+        });
+
+        canvas.addEventListener("mousemove", function(event) {
+            if(!points[currentArr]) points[currentArr] = [];
+            if (points[currentArr].length > 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(450, 630, 17, 0, 2 * Math.PI, false);
+                ctx.stroke();
+                
+                for (var xx = 0 ; xx <= currentArr ; xx++){
+                  ctx.beginPath();
+                  ctx.moveTo(snaperWraper(points[xx][0].x), snaperWraper(points[xx][0].y));
+                  for (var i = 1; i < points[xx].length; i++) {
+                      ctx.lineTo(points[xx][i].x, points[xx][i].y);
+                  }
+                  if (xx == currentArr) ctx.lineTo(snaperWraper(event.clientX+shifter), snaperWraper(event.clientY+shifter));
+                  ctx.stroke();
+                }
+                
+            }
+        });
+
+        canvas.addEventListener("mouseup", function(event) {
+            if(!points[currentArr]) points[currentArr] = [];
+            ctx.beginPath();
+            ctx.moveTo(snaperWraper(points[currentArr][0].x), snaperWraper(points[currentArr][0].y));
+            for (var i = 1; i < points[currentArr].length; i++) {
+                ctx.lineTo(points[currentArr][i].x, points[currentArr][i].y);
+            }
+            ctx.lineTo(snaperWraper(event.clientX+shifter), snaperWraper(event.clientY+shifter));
+            ctx.stroke();
+        });
+        
+        canvas.addEventListener("contextmenu", function(event) {
+            if(!points[currentArr]) points[currentArr] = [];
+            event.preventDefault();
+            if (points[currentArr].length > 2) {
+                ctx.closePath();
+                var r = '';
+                points.forEach(pts => {
+                    r += "[\n";
+                    pts.forEach(p => {
+                        r += "  {\"x\":"+p.x+", \"y\":"+p.y+"},\n";
+                    })
+                    r += "],\n";
+                })
+                currentArr += 1;
+                console.log(r);
+            }
+        });
+        
+        
+    </script>
+</body>
+</html>
